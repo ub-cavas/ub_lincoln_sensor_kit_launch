@@ -25,6 +25,7 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import LoadComposableNodes
 from launch_ros.descriptions import ComposableNode
 from launch_ros.parameter_descriptions import ParameterFile
+import yaml
 
 
 def launch_setup(context, *args, **kwargs):
@@ -35,6 +36,15 @@ def launch_setup(context, *args, **kwargs):
         ),
         allow_substs=True,
     )
+
+    # Get the path to the parameter file
+    param_file_path = LaunchConfiguration("concatenate_and_time_sync_node_param_path").perform(context)
+
+    print(param_file_path)
+    # Read and print the YAML file
+    with open(param_file_path, 'r') as f:
+        param_contents = yaml.safe_load(f)
+        print(param_contents)
 
     # set concat filter as a component
     concat_component = ComposableNode(
@@ -65,7 +75,7 @@ def generate_launch_description():
     def add_launch_arg(name: str, default_value=None):
         launch_arguments.append(DeclareLaunchArgument(name, default_value=default_value))
 
-    sample_sensor_kit_launch_share_dir = get_package_share_directory("sample_sensor_kit_launch")
+    single_lidar_sensor_kit_launch_share_dir = get_package_share_directory("single_lidar_sensor_kit_launch")
 
     add_launch_arg("base_frame", "base_link")
     add_launch_arg("use_multithread", "False")
@@ -74,7 +84,7 @@ def generate_launch_description():
     add_launch_arg(
         "concatenate_and_time_sync_node_param_path",
         os.path.join(
-            sample_sensor_kit_launch_share_dir,
+            single_lidar_sensor_kit_launch_share_dir,
             "config",
             "concatenate_and_time_sync_node.param.yaml",
         ),
