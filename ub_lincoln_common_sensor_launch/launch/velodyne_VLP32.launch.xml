@@ -1,10 +1,10 @@
 <launch>
   <!-- Params -->
   <arg name="launch_driver" default="true"/>
-  <arg name="model" default="VLS128"/>
-  <arg name="max_range" default="250.0"/>
-  <arg name="min_range" default="0.5"/>
-  <arg name="sensor_frame" default="velodyne"/>
+  <arg name="model" default="VLP32"/>
+  <arg name="max_range" default="150.0"/>
+  <arg name="min_range" default="0.3"/>
+  <arg name="sensor_frame" default="velodyne_top"/>
   <arg name="return_mode" default="Dual"/>
   <arg name="sensor_ip" default="192.168.1.201"/>
   <arg name="host_ip" default="255.255.255.255"/>
