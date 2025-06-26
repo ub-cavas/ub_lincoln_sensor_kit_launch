@@ -6,7 +6,7 @@
     <xacro:include filename="$(find imu_description)/urdf/imu.xacro"/>
     
     <xacro:arg name="gpu" default="true"/>
-    <xacro:arg name="config_dir" default="$(find single_lidar_sensor_kit_description)/config"/>
+    <xacro:arg name="config_dir" default="$(find ub_lincoln_sensor_kit_description)/config"/>
 
     <xacro:property name="sensor_kit_base_link" default="sensor_kit_base_link"/>
 
