@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(ub_lincoln_common_sensor_launch)
+project(ub_lincoln_sensor_common_launch)
 
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()

@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ub_lincoln_common_sensor_launch</name>
+  <name>ub_lincoln_sensor_common_launch</name>
   <version>0.0.1</version>
-  <description>The ub_lincoln_common_sensor_launch package</description>
+  <description>The ub_lincoln_sensor_common_launch package</description>
   <maintainer email="cse-cavas@buffalo.edu">UB CSE CAVAS</maintainer>
   <license>Apache License 2.0</license>
 
