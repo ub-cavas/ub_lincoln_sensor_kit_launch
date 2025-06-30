@@ -247,7 +247,7 @@ def generate_launch_description():
             DeclareLaunchArgument(name, default_value=default_value, description=description)
         )
 
-    common_sensor_share_dir = get_package_share_directory("ub_lincoln_common_sensor_launch")
+    common_sensor_share_dir = get_package_share_directory("ub_lincoln_sensor_common_launch")
 
     add_launch_arg("sensor_model", description="sensor model name")
     add_launch_arg("config_file", "", description="sensor configuration file")
