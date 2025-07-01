@@ -5,7 +5,7 @@
 
   <group>
     <!-- LiDAR Driver -->
-    <include file="$(find-pkg-share ub_lincoln_sensor_common_launch)/launch/lidar.launch.xml">
+    <include file="$(find-pkg-share ub_lincoln_sensor_common_launch)/launch/lidar_test.launch.xml"> <!--TODO: Update this file after testing!!-->
       <arg name="launch_driver" value="$(var launch_driver)"/>
       <arg name="vehicle_mirror_param_file" value="$(var vehicle_mirror_param_file)"/>
       <arg name="pointcloud_container_name" value="$(var pointcloud_container_name)"/>

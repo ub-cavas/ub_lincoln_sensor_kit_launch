@@ -28,44 +28,28 @@ from launch_ros.parameter_descriptions import ParameterFile
 import yaml
 
 
-def get_lidar_make(sensor_name):
-    if sensor_name[:6].lower() == "pandar":
-        return "Hesai", ".csv"
-    elif sensor_name[:3].lower() in ["hdl", "vlp", "vls"]:
-        return "Velodyne", ".yaml"
-    return "unrecognized_sensor_model"
-
-
 def get_vehicle_info(context):
-    # TODO(TIER IV): Use Parameter Substitution after we drop Galactic support
-    # https://github.com/ros2/launch_ros/blob/master/launch_ros/launch_ros/substitutions/parameter.py
-    gp = {}
 
     path = LaunchConfiguration("vehicle_info_param_file").perform(context)
     with open(path,"r") as f:
-        p = yaml.safe_load(f)["/**"]["ros__parameters"]
-
-    print("vehicle_info_params:",p)
-    
-    gp["vehicle_length"] = p["front_overhang"] + p["wheel_base"] + p["rear_overhang"]
-    gp["vehicle_width"] = p["wheel_tread"] + p["left_overhang"] + p["right_overhang"]
-    gp["min_longitudinal_offset"] = -p["rear_overhang"]
-    gp["max_longitudinal_offset"] = gp["front_overhang"] + p["wheel_base"]
-    gp["min_lateral_offset"] = -(p["wheel_tread"] / 2.0 + p["right_overhang"])
-    gp["max_lateral_offset"] = p["wheel_tread"] / 2.0 + p["left_overhang"]
-    gp["min_height_offset"] = 0.0
-    gp["max_height_offset"] = p["vehicle_height"]
-
-    print("vehicle_params:",gp)
-    
-    return p
+        p = yaml.safe_load(f)["/**"]["ros__parameters"]  
+        vp ={}
+        vp["vehicle_length"] = p["front_overhang"] + p["wheel_base"] + p["rear_overhang"]
+        vp["vehicle_width"] = p["wheel_tread"] + p["left_overhang"] + p["right_overhang"]
+        vp["min_longitudinal_offset"] = -p["rear_overhang"]
+        vp["max_longitudinal_offset"] = p["front_overhang"] + p["wheel_base"]
+        vp["min_lateral_offset"] = -(p["wheel_tread"] / 2.0 + p["right_overhang"])
+        vp["max_lateral_offset"] = p["wheel_tread"] / 2.0 + p["left_overhang"]
+        vp["min_height_offset"] = 0.0
+        vp["max_height_offset"] = p["vehicle_height"]  
+    return vp
 
 
 def get_vehicle_mirror_info(context):
     path = LaunchConfiguration("vehicle_mirror_param_file").perform(context)
     with open(path, "r") as f:
-        p = yaml.safe_load(f)["/**"]["ros__parameters"]
-    return p
+        vmp = yaml.safe_load(f)["/**"]["ros__parameters"]
+    return vmp
 
 
 def launch_setup(context, *args, **kwargs):
@@ -77,19 +61,19 @@ def launch_setup(context, *args, **kwargs):
 
     # Model and make
     sensor_model = LaunchConfiguration("sensor_model").perform(context)
-    sensor_make, sensor_extension = get_lidar_make(sensor_model)
+    # sensor_make, sensor_extension = get_lidar_make(sensor_model)
     nebula_decoders_share_dir = get_package_share_directory("nebula_decoders")
 
     # Calibration file
-    sensor_calib_fp = os.path.join(
-        nebula_decoders_share_dir,
-        "calibration",
-        sensor_make.lower(),
-        sensor_model + sensor_extension,
-    )
-    assert os.path.exists(
-        sensor_calib_fp
-    ), "Sensor calib file under calibration/ was not found: {}".format(sensor_calib_fp)
+    # sensor_calib_fp = os.path.join(
+    #     nebula_decoders_share_dir,
+    #     "calibration",
+    #     velodyne,
+    #     VLP32.yaml,
+    # )
+    # assert os.path.exists(
+    #     sensor_calib_fp
+    # ), "Sensor calib file under calibration/ was not found: {}".format(sensor_calib_fp)
 
     # Pointcloud preprocessor parameters
     distortion_corrector_node_param = ParameterFile(
@@ -103,57 +87,39 @@ def launch_setup(context, *args, **kwargs):
 
     nodes = []
 
-    nodes.append(
-        ComposableNode(
-            package="autoware_glog_component",
-            plugin="GlogComponent",
-            name="glog_component",
-        )
-    )
+    # nodes.append(
+    #     ComposableNode(
+    #         package="autoware_glog_component",
+    #         plugin="GlogComponent",
+    #         name="glog_component",
+    #     )
+    # )
 
     nodes.append(
-        ComposableNode(
-            package="nebula_ros",
-            plugin=sensor_make + "RosWrapper",
-            name=sensor_make.lower() + "_ros_wrapper_node",
-            parameters=[
-                {
-                    "calibration_file": sensor_calib_fp,
-                    "sensor_model": sensor_model,
-                    "launch_hw": LaunchConfiguration("launch_driver"),
-                    **create_parameter_dict(
-                        "host_ip",
-                        "sensor_ip",
-                        "data_port",
-                        "gnss_port",
-                        "return_mode",
-                        "min_range",
-                        "max_range",
-                        "frame_id",
-                        "scan_phase",
-                        "cloud_min_angle",
-                        "cloud_max_angle",
-                        "dual_return_distance_threshold",
-                        "rotation_speed",
-                        "packet_mtu_size",
-                        "setup_sensor",
-                        "udp_only",
-                    ),
-                },
-            ],
-            remappings=[
-                # cSpell:ignore knzo25
-                # TODO(knzo25): fix the remapping once nebula gets updated
-                ("velodyne_points", "pointcloud_raw_ex"),
-            ],
-            extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
-        )
+    ComposableNode(
+        package="nebula_ros",
+        plugin="VelodyneRosWrapper",
+        name="velodyne_ros_wrapper_node",
+        parameters=[
+            LaunchConfiguration("config_file"),  # Load parameters from file
+            {
+                "calibration_file": LaunchConfiguration("calib_file"),
+                "sensor_model": sensor_model,
+                "launch_hw": LaunchConfiguration("launch_driver"),
+            },
+        ],
+        remappings=[
+            ("velodyne_points", "pointcloud_raw_ex"),
+        ],
+        extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
     )
+)
 
     cropbox_parameters = create_parameter_dict("input_frame", "output_frame")
     cropbox_parameters["negative"] = True
 
     vehicle_info = get_vehicle_info(context)
+    print("vehicle_info",vehicle_info)
     cropbox_parameters["min_x"] = vehicle_info["min_longitudinal_offset"]
     cropbox_parameters["max_x"] = vehicle_info["max_longitudinal_offset"]
     cropbox_parameters["min_y"] = vehicle_info["min_lateral_offset"]
@@ -176,6 +142,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     mirror_info = get_vehicle_mirror_info(context)
+    print("mirror_info",mirror_info)
     cropbox_parameters["min_x"] = mirror_info["min_longitudinal_offset"]
     cropbox_parameters["max_x"] = mirror_info["max_longitudinal_offset"]
     cropbox_parameters["min_y"] = mirror_info["min_lateral_offset"]
@@ -261,7 +228,7 @@ def generate_launch_description():
     add_launch_arg("launch_driver", "True", "do launch driver")
     add_launch_arg("setup_sensor", "True", "configure sensor")
     add_launch_arg("sensor_ip", "192.168.1.201", "device ip address")
-    add_launch_arg("host_ip", "255.255.255.255", "host ip address")
+    add_launch_arg("host_ip","192.168.1.10", "host ip address")
     add_launch_arg("scan_phase", "0.0")
     add_launch_arg("base_frame", "base_link", "base frame id")
     add_launch_arg("min_range", "0.3", "minimum view range for Velodyne sensors")
@@ -272,6 +239,7 @@ def generate_launch_description():
     add_launch_arg("gnss_port", "2380", "device gnss port number")
     add_launch_arg("packet_mtu_size", "1500", "packet mtu size")
     add_launch_arg("rotation_speed", "600", "rotational frequency")
+    add_launch_arg("return_mode","dual","Laser Return Type")
     add_launch_arg("dual_return_distance_threshold", "0.1", "dual return distance threshold")
     add_launch_arg("frame_id", "lidar", "frame id")
     add_launch_arg("input_frame", LaunchConfiguration("base_frame"), "use for cropbox")
