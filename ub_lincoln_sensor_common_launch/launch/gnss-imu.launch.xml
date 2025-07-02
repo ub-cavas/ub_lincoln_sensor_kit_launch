@@ -12,7 +12,7 @@
 
     <!-- Novatel GNSS Driver -->
     <group if="$(eval &quot;'$(var launch_driver)'&quot;)">
-      <include file="$(find-pkg-share novatel_oem7_driver)/launch/oem7_net.launch.py">
+      <include file="$(find-pkg-share novatel_oem7_driver)/launch/oem7_net.launch.py"> <!-- TODO: Change the code to use params from our config -->
         <arg name="oem7_ip_addr" value="192.168.100.201"/>
         <arg name="oem7_port" value="3005"/>
       </include>

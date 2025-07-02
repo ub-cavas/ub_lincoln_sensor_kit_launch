@@ -33,6 +33,8 @@ def get_lidar_make(sensor_name):
         return "Hesai", ".csv"
     elif sensor_name[:3].lower() in ["hdl", "vlp", "vls"]:
         return "Velodyne", ".yaml"
+    elif sensor_name.lower() in ["helios", "bpearl"]:
+        return "Robosense", None
     return "unrecognized_sensor_model"
 
 
@@ -74,15 +76,18 @@ def launch_setup(context, *args, **kwargs):
     nebula_decoders_share_dir = get_package_share_directory("nebula_decoders")
 
     # Calibration file
-    sensor_calib_fp = os.path.join(
-        nebula_decoders_share_dir,
-        "calibration",
-        sensor_make.lower(),
-        sensor_model + sensor_extension,
-    )
-    assert os.path.exists(
-        sensor_calib_fp
-    ), "Sensor calib file under calibration/ was not found: {}".format(sensor_calib_fp)
+    if sensor_extension is not None:  # Velodyne and Hesai
+        sensor_calib_fp = os.path.join(
+            nebula_decoders_share_dir,
+            "calibration",
+            sensor_make.lower(),
+            sensor_model + sensor_extension,
+        )
+        assert os.path.exists(
+            sensor_calib_fp
+        ), "Sensor calib file under calibration/ was not found: {}".format(sensor_calib_fp)
+    else:  # Robosense
+        sensor_calib_fp = ""
 
     # Pointcloud preprocessor parameters
     distortion_corrector_node_param = ParameterFile(
@@ -98,46 +103,22 @@ def launch_setup(context, *args, **kwargs):
 
     nodes.append(
         ComposableNode(
-            package="autoware_glog_component",
-            plugin="GlogComponent",
-            name="glog_component",
-        )
-    )
-
-    nodes.append(
-        ComposableNode(
             package="nebula_ros",
             plugin=sensor_make + "RosWrapper",
             name=sensor_make.lower() + "_ros_wrapper_node",
-            parameters=[
+            parameters=[LaunchConfiguration("config_file"),
                 {
                     "calibration_file": sensor_calib_fp,
                     "sensor_model": sensor_model,
                     "launch_hw": LaunchConfiguration("launch_driver"),
-                    **create_parameter_dict(
-                        "host_ip",
-                        "sensor_ip",
-                        "data_port",
-                        "gnss_port",
-                        "return_mode",
-                        "min_range",
-                        "max_range",
-                        "frame_id",
-                        "scan_phase",
-                        "cloud_min_angle",
-                        "cloud_max_angle",
-                        "dual_return_distance_threshold",
-                        "rotation_speed",
-                        "packet_mtu_size",
-                        "setup_sensor",
-                        "udp_only",
-                    ),
                 },
             ],
             remappings=[
                 # cSpell:ignore knzo25
                 # TODO(knzo25): fix the remapping once nebula gets updated
                 ("velodyne_points", "pointcloud_raw_ex"),
+                # ("robosense_points", "pointcloud_raw_ex"), #for robosense
+                # ("pandar_points", "pointcloud_raw_ex"), # for hesai
             ],
             extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
         )
@@ -218,7 +199,7 @@ def launch_setup(context, *args, **kwargs):
             name="ring_outlier_filter",
             remappings=[
                 ("input", "rectified/pointcloud_ex"),
-                ("output", "/sensing/lidar/concatenated/pointcloud"),
+                ("output", "concatenated/pointcloud"),
             ],
             parameters=[ring_outlier_filter_node_param, ring_outlier_output_frame],
             extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
@@ -228,7 +209,7 @@ def launch_setup(context, *args, **kwargs):
     # set container to run all required components in the same process
     container = ComposableNodeContainer(
         name=LaunchConfiguration("container_name"),
-        namespace="autoware_pointcloud_preprocessor",
+        namespace="pointcloud_preprocessor",
         package="rclcpp_components",
         executable=LaunchConfiguration("container_executable"),
         composable_node_descriptions=nodes,
@@ -266,17 +247,16 @@ def generate_launch_description():
     add_launch_arg("packet_mtu_size", "1500", "packet mtu size")
     add_launch_arg("rotation_speed", "600", "rotational frequency")
     add_launch_arg("dual_return_distance_threshold", "0.1", "dual return distance threshold")
-    add_launch_arg("frame_id", "lidar", "frame id")
+    add_launch_arg("frame_id", "velodyne_top", "frame id")
     add_launch_arg("input_frame", LaunchConfiguration("base_frame"), "use for cropbox")
     add_launch_arg("output_frame", LaunchConfiguration("base_frame"), "use for cropbox")
-    add_launch_arg("use_multithread", "True", "use multithread")
-    add_launch_arg("use_intra_process", "True", "use ROS 2 component container communication")
+    add_launch_arg("use_multithread", "False", "use multithread")
+    add_launch_arg("use_intra_process", "False", "use ROS 2 component container communication")
     add_launch_arg("lidar_container_name", "nebula_node_container")
     add_launch_arg("output_as_sensor_frame", "True", "output final pointcloud in sensor frame")
     add_launch_arg(
         "vehicle_mirror_param_file", description="path to the file of vehicle mirror position yaml"
     )
-
     add_launch_arg(
         "distortion_correction_node_param_path",
         os.path.join(
@@ -295,6 +275,7 @@ def generate_launch_description():
         ),
         description="path to parameter file of ring outlier filter node",
     )
+    add_launch_arg("udp_only", "False", "use UDP only")
 
     set_container_executable = SetLaunchConfiguration(
         "container_executable",
