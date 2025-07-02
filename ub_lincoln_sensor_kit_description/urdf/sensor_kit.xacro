@@ -38,12 +38,12 @@
       name="gnss"
       parent="sensor_kit_base_link"
       namespace=""
-      x="${calibration['sensor_kit_base_link']['gps']['x']}"
-      y="${calibration['sensor_kit_base_link']['gps']['y']}"
-      z="${calibration['sensor_kit_base_link']['gps']['z']}"
-      roll="${calibration['sensor_kit_base_link']['gps']['roll']}"
-      pitch="${calibration['sensor_kit_base_link']['gps']['pitch']}"
-      yaw="${calibration['sensor_kit_base_link']['gps']['yaw']}"
+      x="${calibration['sensor_kit_base_link']['gnss_link']['x']}"
+      y="${calibration['sensor_kit_base_link']['gnss_link']['y']}"
+      z="${calibration['sensor_kit_base_link']['gnss_link']['z']}"
+      roll="${calibration['sensor_kit_base_link']['gnss_link']['roll']}"
+      pitch="${calibration['sensor_kit_base_link']['gnss_link']['pitch']}"
+      yaw="${calibration['sensor_kit_base_link']['gnss_link']['yaw']}"
       fps="100"
     />
 
