@@ -5,10 +5,11 @@
 
    <!-- GNSS -->
   <group>
-    <push-ros-namespace namespace="gnss"/>
-
-    <let name="navsatfix_topic_name" value="/novatel/oem7/fix"/>
+    
+    <let name="navsatfix_topic_name" value="/sensing/gnss/novatel/oem7/fix"/>
     <let name="orientation_topic_name" value="/autoware_orientation"/>
+
+    <push-ros-namespace namespace="gnss"/>
 
     <!-- Novatel GNSS Driver -->
     <group if="$(eval &quot;'$(var launch_driver)'&quot;)">
@@ -34,9 +35,10 @@
 
   <!-- IMU -->
   <group if="$(eval &quot;'$(var launch_driver)'&quot;)">
-    <push-ros-namespace namespace="imu"/>
+    
+    <arg name="imu_raw_name" default="/sensing/gnss/novatel/oem7/imu/data_raw"/>
 
-    <arg name="imu_raw_name" default="/novatel/oem7/imu/data_raw"/>
+    <push-ros-namespace namespace="imu"/>
 
     <include file="$(find-pkg-share autoware_imu_corrector)/launch/imu_corrector.launch.xml">
       <arg name="input_topic" value="$(var imu_raw_name)"/>
