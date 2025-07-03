@@ -6,19 +6,14 @@
 
   <group>
     <!-- LiDAR Driver -->
-    <include file="$(find-pkg-share ub_lincoln_sensor_kit_launch)/launch/lidar.launch.xml">
+    <include file="$(find-pkg-share ub_lincoln_sensor_common_launch)/launch/lidar.launch.xml">
       <arg name="launch_driver" value="$(var launch_driver)"/>
       <arg name="vehicle_mirror_param_file" value="$(var vehicle_mirror_param_file)"/>
       <arg name="pointcloud_container_name" value="$(var pointcloud_container_name)"/>
     </include>
 
-    <!-- IMU Driver -->
-    <include file="$(find-pkg-share ub_lincoln_sensor_kit_launch)/launch/imu.launch.xml">
-      <arg name="launch_driver" value="$(var launch_driver)"/>
-    </include>
-
-    <!-- GNSS Driver -->
-    <include file="$(find-pkg-share ub_lincoln_sensor_kit_launch)/launch/gnss.launch.xml">
+    <!-- GNSS & IMU Driver -->
+    <include file="$(find-pkg-share ub_lincoln_sensor_common_launch)/launch/gnss-imu.launch.xml">
       <arg name="launch_driver" value="$(var launch_driver)"/>
     </include>
 

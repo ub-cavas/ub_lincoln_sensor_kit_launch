@@ -1,37 +1,24 @@
-<!-- <launch>
+<launch>
   <arg name="launch_driver" default="true"/>
-  <arg name="gnss_receiver" default="novatel" description="ublox, septentrio, novatel(default)"/>
   <arg name="imu_corrector_param_file" default="$(find-pkg-share ub_lincoln_sensor_kit_description)/config/imu_corrector.param.yaml"/>
 
+
+   <!-- GNSS -->
   <group>
-    <!-- Switch topic name -->
-    <!-- <let name="navsatfix_topic_name" value="ublox/nav_sat_fix" if="$(eval &quot;'$(var gnss_receiver)'=='ublox'&quot;)"/> -->
-    <!-- <let name="navsatfix_topic_name" value="septentrio/nav_sat_fix" if="$(eval &quot;'$(var gnss_receiver)'=='septentrio'&quot;)"/> -->
-    <let name="navsatfix_topic_name" value="/in_gnss/navsat_fix" if="$(eval &quot;'$(var gnss_receiver)'=='novatel'&quot;)"/>
+    
+    <let name="navsatfix_topic_name" value="/sensing/gnss/novatel/oem7/fix"/>
     <let name="orientation_topic_name" value="/autoware_orientation"/>
 
-    <!-- Ublox Driver -->
-    <!-- <group if="$(eval &quot;'$(var gnss_receiver)'=='ublox'&quot;)">
-      <node pkg="ublox_gps" name="ublox" exec="ublox_gps_node" if="$(var launch_driver)" respawn="true" respawn_delay="1.0">
-        <remap from="~/fix" to="~/nav_sat_fix"/>
-        <param from="$(find-pkg-share ublox_gps)/c94_f9p_rover.yaml"/>
-      </node>
-    </group> -->
-
-    <!-- Septentrio GNSS Driver -->
-    <!-- <group if="$(eval &quot;'$(var launch_driver)' and '$(var gnss_receiver)'=='septentrio'&quot;)">
-      <include file="$(find-pkg-share septentrio_gnss_driver)/launch/mosaic_x5_rover.launch.xml"/>
-    </group> -->
+    <push-ros-namespace namespace="gnss"/>
 
     <!-- Novatel GNSS Driver -->
-    <!-- <group if="$(eval &quot;'$(var launch_driver)' and '$(var gnss_receiver)'=='novatel'&quot;)">
-      <include file="$(find-pkg-share novatel_oem7_driver)/launch/oem7_net.launch.py">
+    <group if="$(eval &quot;'$(var launch_driver)'&quot;)">
+      <include file="$(find-pkg-share novatel_oem7_driver)/launch/oem7_net.launch.py"> <!-- TODO: Change the code to use params from our config -->
         <arg name="oem7_ip_addr" value="192.168.100.201"/>
         <arg name="oem7_port" value="3005"/>
       </include>
-    </group> -->
+    </group>
 
-    <push-ros-namespace namespace="gnss"/>
     <!-- NavSatFix to MGRS Pose -->
     <include file="$(find-pkg-share autoware_gnss_poser)/launch/gnss_poser.launch.xml">
       <arg name="input_topic_fix" value="$(var navsatfix_topic_name)"/>
@@ -45,9 +32,13 @@
     </include>
   </group>
 
-  <group if="$(eval &quot;'$(var launch_driver)' and '$(var gnss_receiver)'=='novatel' &quot;)">
+
+  <!-- IMU -->
+  <group if="$(eval &quot;'$(var launch_driver)'&quot;)">
+    
+    <arg name="imu_raw_name" default="/sensing/gnss/novatel/oem7/imu/data_raw"/>
+
     <push-ros-namespace namespace="imu"/>
-    <arg name="imu_raw_name" default="/in_imu/data_raw"/>
 
     <include file="$(find-pkg-share autoware_imu_corrector)/launch/imu_corrector.launch.xml">
       <arg name="input_topic" value="$(var imu_raw_name)"/>
@@ -63,4 +54,4 @@
   </group>
 
 
-</launch> -->
+</launch>

@@ -1,0 +1,29 @@
+<launch>
+  <arg name="model" default="VLP32"/>
+  <arg name="launch_driver" default="true"/>
+  <arg name="vehicle_mirror_param_file"/>
+  <arg name="use_intra_process_comms" default="true"/>
+  <arg name="vehicle_id" default="$(env VEHICLE_ID default)"/>
+  <arg name="pointcloud_container_name" default="pointcloud_container"/>
+  <arg name="calib_file" default="$(find-pkg-share nebula_decoders)/calibration/velodyne/VLP32.yaml"/>
+
+<!-- LIDAR -->
+
+  <group>
+    <push-ros-namespace namespace="lidar"/>
+
+    <let name="driver_pointcloud_topic_name" value="/velodyne_points"/>
+
+    <group>
+      <push-ros-namespace namespace="top"/>
+      <include file="$(find-pkg-share ub_lincoln_sensor_common_launch)/launch/nebula_node_container.launch.py">
+        <arg name="sensor_model" value="$(var model)"/>
+        <arg name="launch_driver" value="$(var launch_driver)"/>
+        <arg name="config_file" value="$(find-pkg-share ub_lincoln_sensor_common_launch)/config/VLP32.param.yaml"/>
+        <arg name="vehicle_mirror_param_file" value="$(var vehicle_mirror_param_file)"/>
+        <arg name="container_name" value="pointcloud_container"/>
+      </include>
+      
+    </group>
+  </group>
+</launch>
