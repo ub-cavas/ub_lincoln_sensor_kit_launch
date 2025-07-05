@@ -1,10 +1,20 @@
 <launch>
   <arg name="launch_driver" default="true" description="do launch driver"/>
-  <arg name="vehicle_mirror_param_file" description="path to the file of vehicle mirror position yaml"/>
+  <arg name="vehicle_mirror_param_file" default="$(find-pkg-share ub_lincoln_vehicle_description)/config/mirror.param.yaml" description="path to the file of vehicle mirror position yaml"/>
   <arg name="pointcloud_container_name" default="pointcloud_container"/>
   <arg name="vehicle_id" default="$(env VEHICLE_ID default)"/>
-
+  <arg name="use_sim_time" default="false"/>
+  <arg name="vehicle_model" default="ub_lincoln_vehicle"/>
+  <arg name="vehicle_param_file" default="$(find-pkg-share ub_lincoln_vehicle_description)/config/vehicle_info.param.yaml"/>
+  
   <group>
+    <push-ros-namespace namespace="sensing"/>
+    
+    <include file="$(find-pkg-share autoware_global_parameter_loader)/launch/global_params.launch.py">
+      <arg name="use_sim_time" value="$(var use_sim_time)"/>
+      <arg name="vehicle_model" value="$(var vehicle_model)"/>
+    </include>
+
     <!-- LiDAR Driver -->
     <include file="$(find-pkg-share ub_lincoln_sensor_common_launch)/launch/lidar.launch.xml">
       <arg name="launch_driver" value="$(var launch_driver)"/>

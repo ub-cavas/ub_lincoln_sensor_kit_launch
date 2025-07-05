@@ -39,12 +39,14 @@ def get_lidar_make(sensor_name):
 
 
 def get_vehicle_info(context):
-    # TODO(TIER IV): Use Parameter Substitution after we drop Galactic support
-    # https://github.com/ros2/launch_ros/blob/master/launch_ros/launch_ros/substitutions/parameter.py
-    gp = context.launch_configurations.get("ros_params", {})
+
+    gp = context.launch_configurations.get("ros__params", {})
+    
     if not gp:
         gp = dict(context.launch_configurations.get("global_params", {}))
+
     p = {}
+    
     p["vehicle_length"] = gp["front_overhang"] + gp["wheel_base"] + gp["rear_overhang"]
     p["vehicle_width"] = gp["wheel_tread"] + gp["left_overhang"] + gp["right_overhang"]
     p["min_longitudinal_offset"] = -gp["rear_overhang"]
@@ -199,7 +201,7 @@ def launch_setup(context, *args, **kwargs):
             name="ring_outlier_filter",
             remappings=[
                 ("input", "rectified/pointcloud_ex"),
-                ("output", "concatenated/pointcloud"),
+                ("output", "/sensing/lidar/concatenated/pointcloud"),
             ],
             parameters=[ring_outlier_filter_node_param, ring_outlier_output_frame],
             extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
@@ -230,8 +232,10 @@ def generate_launch_description():
 
     common_sensor_share_dir = get_package_share_directory("ub_lincoln_sensor_common_launch")
 
+    common_vehicle_share_dir = get_package_share_directory("ub_lincoln_vehicle_description")
+
     add_launch_arg("sensor_model", description="sensor model name")
-    add_launch_arg("config_file", "", description="sensor configuration file")
+    add_launch_arg("config_file", os.path.join(common_sensor_share_dir,"config","VLP32.param.yaml"), description="sensor configuration file")
     add_launch_arg("launch_driver", "True", "do launch driver")
     add_launch_arg("setup_sensor", "True", "configure sensor")
     add_launch_arg("sensor_ip", "192.168.1.201", "device ip address")
@@ -250,12 +254,25 @@ def generate_launch_description():
     add_launch_arg("frame_id", "velodyne_top", "frame id")
     add_launch_arg("input_frame", LaunchConfiguration("base_frame"), "use for cropbox")
     add_launch_arg("output_frame", LaunchConfiguration("base_frame"), "use for cropbox")
-    add_launch_arg("use_multithread", "False", "use multithread")
+    add_launch_arg("use_multithread", "True", "use multithread")
     add_launch_arg("use_intra_process", "False", "use ROS 2 component container communication")
     add_launch_arg("lidar_container_name", "nebula_node_container")
     add_launch_arg("output_as_sensor_frame", "True", "output final pointcloud in sensor frame")
     add_launch_arg(
-        "vehicle_mirror_param_file", description="path to the file of vehicle mirror position yaml"
+        "vehicle_mirror_param_file",
+        os.path.join(common_vehicle_share_dir,
+        "config",
+        "mirror.param.yaml"
+        ),
+        description="path to the file of vehicle mirror position yaml"
+    )
+    add_launch_arg(
+        "vehicle_param_file",
+        os.path.join(common_vehicle_share_dir,
+        "config",
+        "vehicle_info.param.yaml"
+        ),
+        description="path to the file of vehicle mirror position yaml"
     )
     add_launch_arg(
         "distortion_correction_node_param_path",
