@@ -14,19 +14,20 @@
       <push-ros-namespace namespace="lidar"/>
       <group>
         <push-ros-namespace namespace="top"/>
-        <include file="$(find-pkg-share ub_lincoln_sensor_common_launch)/launch/nebula_node_container.launch.py">
+        <include file="$(find-pkg-share nebula_ros)/launch/nebula_launch.py">
           <arg name="sensor_model" value="VLP32"/>
           <arg name="launch_driver" value="$(var launch_driver)"/>
           <arg name="config_file" value="$(find-pkg-share ub_lincoln_sensor_common_launch)/config/VLP32.param.yaml"/>
-          <arg name="vehicle_mirror_param_file" value="$(var vehicle_mirror_param_file)"/>
-          <arg name="container_name" value="pointcloud_container"/>
+          <arg name="launch_driver_only" value="true"/>
+          <!-- <arg name="vehicle_mirror_param_file" value="$(var vehicle_mirror_param_file)"/> -->
+          <!-- <arg name="container_name" value="pointcloud_container"/> -->
         </include>
       </group>
     </group>
 
     <!-- GNSS -->
     <group>
-      <let name="navsatfix_topic_name" value="/sensing/gnss/novatel/oem7/fix"/>
+      <!-- <let name="navsatfix_topic_name" value="/sensing/gnss/novatel/oem7/fix"/> -->
       <push-ros-namespace namespace="gnss"/>
       <group>
         <include file="$(find-pkg-share novatel_oem7_driver)/launch/oem7_net.launch.py"> <!-- TODO: Change the code to use params from our config -->
@@ -34,9 +35,10 @@
           <arg name="oem7_port" value="3005"/>
         </include>
       </group>
+    </group>
 
     <!-- IMU -->
-    <arg name="imu_raw_name" default="/sensing/gnss/novatel/oem7/imu/data_raw"/>
+    <!-- <arg name="imu_raw_name" default="/sensing/gnss/novatel/oem7/imu/data_raw"/> -->
     <group>
       <!-- IMU driver is a part of the GNSS driver-->
     </group>
@@ -44,7 +46,7 @@
 
   <!-- Vehicle -->
   <group>
-    <push-ros-namespace namespace="vehicle"/>
+    <!-- <push-ros-namespace namespace="vehicle"/> -->
     <!-- DBW Driver -->
     <include file="$(find-pkg-share ub_lincoln_vehicle_common_launch)/launch/dbw.launch.xml">
       <arg name="launch_driver" value="$(var launch_driver)"/>
