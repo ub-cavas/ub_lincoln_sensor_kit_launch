@@ -1,11 +1,11 @@
 # Copyright 2023 Tier IV, Inc. All rights reserved.
-
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-
-# http://www.apache.org/licenses/LICENSE-2.0
-
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+
 from ament_index_python.packages import get_package_share_directory
 import launch
 from launch.actions import DeclareLaunchArgument
@@ -26,6 +27,7 @@ from launch_ros.descriptions import ComposableNode
 from launch_ros.parameter_descriptions import ParameterFile
 import yaml
 
+
 def get_lidar_make(sensor_name):
     if sensor_name[:6].lower() == "pandar":
         return "Hesai", ".csv"
@@ -34,6 +36,7 @@ def get_lidar_make(sensor_name):
     elif sensor_name.lower() in ["helios", "bpearl"]:
         return "Robosense", None
     return "unrecognized_sensor_model"
+
 
 def get_vehicle_info(context):
     # TODO(TIER IV): Use Parameter Substitution after we drop Galactic support
@@ -52,11 +55,13 @@ def get_vehicle_info(context):
     p["max_height_offset"] = gp["vehicle_height"]
     return p
 
+
 def get_vehicle_mirror_info(context):
     path = LaunchConfiguration("vehicle_mirror_param_file").perform(context)
     with open(path, "r") as f:
         p = yaml.safe_load(f)["/**"]["ros__parameters"]
     return p
+
 
 def launch_setup(context, *args, **kwargs):
     def create_parameter_dict(*args):
@@ -84,7 +89,7 @@ def launch_setup(context, *args, **kwargs):
     else:  # Robosense
         sensor_calib_fp = ""
 
-    # --- Start of new conditional block for launch_driver_only ---
+    # Condition to launch nebula_ros driver alone and skip the pipeline
     if LaunchConfiguration("launch_driver_only").perform(context).lower() == "true":
         nodes = []
         nodes.append(
@@ -111,14 +116,12 @@ def launch_setup(context, *args, **kwargs):
             output="both",
         )
         return [container]
-    # --- End of new conditional block ---
 
     # Pointcloud preprocessor parameters
     distortion_corrector_node_param = ParameterFile(
         param_file=LaunchConfiguration("distortion_correction_node_param_path").perform(context),
         allow_substs=True,
     )
-
     ring_outlier_filter_node_param = ParameterFile(
         param_file=LaunchConfiguration("ring_outlier_filter_node_param_path").perform(context),
         allow_substs=True,
@@ -132,9 +135,11 @@ def launch_setup(context, *args, **kwargs):
             plugin=sensor_make + "RosWrapper",
             name=sensor_make.lower() + "_ros_wrapper_node",
             parameters=[LaunchConfiguration("config_file"),
-                        {"calibration_file": sensor_calib_fp,
-                         "sensor_model": sensor_model,
-                         "launch_hw": LaunchConfiguration("launch_driver")},
+                {
+                    "calibration_file": sensor_calib_fp,
+                    "sensor_model": sensor_model,
+                    "launch_hw": LaunchConfiguration("launch_driver"),
+                },
             ],
             remappings=[
                 # cSpell:ignore knzo25
@@ -215,7 +220,6 @@ def launch_setup(context, *args, **kwargs):
         ring_outlier_output_frame = {"output_frame": LaunchConfiguration("frame_id")}
     else:
         ring_outlier_output_frame = {"output_frame": ""}  # keep the output frame as the input frame
-
     nodes.append(
         ComposableNode(
             package="autoware_pointcloud_preprocessor",
@@ -223,7 +227,7 @@ def launch_setup(context, *args, **kwargs):
             name="ring_outlier_filter",
             remappings=[
                 ("input", "rectified/pointcloud_ex"),
-                ("output", "concatenated/pointcloud"),
+                ("output", "/sensing/lidar/concatenated/pointcloud"),
             ],
             parameters=[ring_outlier_filter_node_param, ring_outlier_output_frame],
             extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
@@ -242,10 +246,12 @@ def launch_setup(context, *args, **kwargs):
 
     return [container]
 
+
 def generate_launch_description():
     launch_arguments = []
 
     def add_launch_arg(name: str, default_value=None, description=None):
+        # a default_value of None is equivalent to not passing that kwarg at all
         launch_arguments.append(
             DeclareLaunchArgument(name, default_value=default_value, description=description)
         )
@@ -276,6 +282,8 @@ def generate_launch_description():
     add_launch_arg("use_intra_process", "False", "use ROS 2 component container communication")
     add_launch_arg("lidar_container_name", "nebula_node_container")
     add_launch_arg("output_as_sensor_frame", "True", "output final pointcloud in sensor frame")
+    add_launch_arg("udp_only", "False", "use UDP only")
+    add_launch_arg("launch_driver_only", "False", "launch only the driver node")
     add_launch_arg(
         "vehicle_mirror_param_file", description="path to the file of vehicle mirror position yaml"
     )
@@ -297,11 +305,7 @@ def generate_launch_description():
         ),
         description="path to parameter file of ring outlier filter node",
     )
-    add_launch_arg("udp_only", "False", "use UDP only")
-
-    # --- New argument added here ---
-    add_launch_arg("launch_driver_only", "False", "launch only the driver node")
-
+    
     set_container_executable = SetLaunchConfiguration(
         "container_executable",
         "component_container",
