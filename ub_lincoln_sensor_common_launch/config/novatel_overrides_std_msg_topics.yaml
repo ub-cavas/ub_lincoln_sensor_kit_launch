@@ -1,0 +1,8 @@
+# ROS-standard
+NavSatFix:       {topic: fix,            frame_id: gnss_link}
+
+
+
+
+   
+

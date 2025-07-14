@@ -89,6 +89,34 @@ def launch_setup(context, *args, **kwargs):
     else:  # Robosense
         sensor_calib_fp = ""
 
+    # Condition to launch nebula_ros driver alone and skip the pipeline
+    if LaunchConfiguration("launch_driver_only").perform(context).lower() == "true":
+        nodes = []
+        nodes.append(
+            ComposableNode(
+                package="nebula_ros",
+                plugin=sensor_make + "RosWrapper",
+                name=sensor_make.lower() + "_ros_wrapper_node",
+                parameters=[LaunchConfiguration("config_file"),
+                            {"calibration_file": sensor_calib_fp,
+                             "sensor_model": sensor_model,
+                             "launch_hw": LaunchConfiguration("launch_driver")}],
+                remappings=[
+                    ("velodyne_points", "pointcloud_raw_ex"),
+                ],
+                extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
+            )
+        )
+        container = ComposableNodeContainer(
+            name=LaunchConfiguration("container_name"),
+            namespace="pointcloud_preprocessor",
+            package="rclcpp_components",
+            executable=LaunchConfiguration("container_executable"),
+            composable_node_descriptions=nodes,
+            output="both",
+        )
+        return [container]
+
     # Pointcloud preprocessor parameters
     distortion_corrector_node_param = ParameterFile(
         param_file=LaunchConfiguration("distortion_correction_node_param_path").perform(context),
@@ -199,7 +227,7 @@ def launch_setup(context, *args, **kwargs):
             name="ring_outlier_filter",
             remappings=[
                 ("input", "rectified/pointcloud_ex"),
-                ("output", "concatenated/pointcloud"),
+                ("output", "/sensing/lidar/concatenated/pointcloud"),
             ],
             parameters=[ring_outlier_filter_node_param, ring_outlier_output_frame],
             extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
@@ -254,6 +282,8 @@ def generate_launch_description():
     add_launch_arg("use_intra_process", "False", "use ROS 2 component container communication")
     add_launch_arg("lidar_container_name", "nebula_node_container")
     add_launch_arg("output_as_sensor_frame", "True", "output final pointcloud in sensor frame")
+    add_launch_arg("udp_only", "False", "use UDP only")
+    add_launch_arg("launch_driver_only", "False", "launch only the driver node")
     add_launch_arg(
         "vehicle_mirror_param_file", description="path to the file of vehicle mirror position yaml"
     )
@@ -275,8 +305,7 @@ def generate_launch_description():
         ),
         description="path to parameter file of ring outlier filter node",
     )
-    add_launch_arg("udp_only", "False", "use UDP only")
-
+    
     set_container_executable = SetLaunchConfiguration(
         "container_executable",
         "component_container",
