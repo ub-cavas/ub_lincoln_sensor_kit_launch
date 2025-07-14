@@ -29,7 +29,8 @@
       <let name="navsatfix_topic_name" value="/sensing/gnss/novatel/oem7/fix"/>
       <push-ros-namespace namespace="gnss"/>
       <group>
-        <include file="$(find-pkg-share novatel_oem7_driver)/launch/oem7_net.launch.py"> <!-- TODO: Change the code to use params from our config -->
+        <set_env name="NOVATEL_OEM7_DRIVER_PARAM_OVERRIDES_PATH" value="$(find-pkg-share ub_lincoln_sensor_common_launch)/config/novatel_overrides_std_msg_topics.yaml"/>
+        <include file="$(find-pkg-share novatel_oem7_driver)/launch/oem7_net.launch.py">
           <arg name="oem7_ip_addr" value="192.168.100.201"/>
           <arg name="oem7_port" value="3005"/>
         </include>
