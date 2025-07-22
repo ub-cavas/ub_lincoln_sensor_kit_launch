@@ -216,10 +216,11 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # Ring Outlier Filter is the last component in the pipeline, so control the output frame here
-    if LaunchConfiguration("output_as_sensor_frame").perform(context).lower() == "true":
-        ring_outlier_output_frame = {"output_frame": LaunchConfiguration("frame_id")}
-    else:
-        ring_outlier_output_frame = {"output_frame": ""}  # keep the output frame as the input frame
+    # if LaunchConfiguration("output_as_sensor_frame").perform(context).lower() == "true":
+    #     ring_outlier_output_frame = {"output_frame": LaunchConfiguration("frame_id")}
+    # else:
+    #     ring_outlier_output_frame = {"output_frame": ""}  # keep the output frame as the input frame
+    # ^^^ TODO: Commented temporarily will be removed after FINAL CONFIRMATION.
     nodes.append(
         ComposableNode(
             package="autoware_pointcloud_preprocessor",
@@ -229,7 +230,7 @@ def launch_setup(context, *args, **kwargs):
                 ("input", "rectified/pointcloud_ex"),
                 ("output", "/sensing/lidar/concatenated/pointcloud"),
             ],
-            parameters=[ring_outlier_filter_node_param, ring_outlier_output_frame],
+            parameters=[ring_outlier_filter_node_param], # Deleted ring_outlier_output_frame so that values are not overriden
             extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
         )
     )

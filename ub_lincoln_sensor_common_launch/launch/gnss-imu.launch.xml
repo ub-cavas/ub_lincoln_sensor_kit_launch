@@ -35,7 +35,7 @@
 
 
   <!-- IMU -->
-  <group if="$(eval &quot;'$(var launch_driver)'&quot;)">
+  <group>
     
     <arg name="imu_raw_name" default="/sensing/gnss/novatel/oem7/imu/data_raw"/>
 

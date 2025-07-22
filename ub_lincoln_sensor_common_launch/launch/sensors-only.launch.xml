@@ -52,4 +52,11 @@
       <arg name="launch_driver" value="$(var launch_driver)"/>
     </include>
   </group>
+
+  <group>
+    <!-- Bridge -->
+    <include file="$(find-pkg-share ub_lincoln_vehicle_common_launch)/launch/bridge.launch.py">
+      <arg name="launch_driver" value="$(var launch_driver)"/>
+    </include>
+  </group>
 </launch>
