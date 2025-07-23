@@ -40,15 +40,20 @@
 
     <!-- IMU -->
     <!-- <arg name="imu_raw_name" default="/sensing/gnss/novatel/oem7/imu/data_raw"/> -->
-    <group>
-      <!-- IMU driver is a part of the GNSS driver-->
-    </group>
+    <!-- IMU driver is a part of the GNSS driver-->
   </group>
 
   <!-- Vehicle -->
   <group>
     <!-- DBW Driver -->
     <include file="$(find-pkg-share ub_lincoln_vehicle_common_launch)/launch/dbw.launch.xml">
+      <arg name="launch_driver" value="$(var launch_driver)"/>
+    </include>
+  </group>
+
+  <group>
+    <!-- Bridge -->
+    <include file="$(find-pkg-share ub_lincoln_vehicle_common_launch)/launch/bridge.launch.py">
       <arg name="launch_driver" value="$(var launch_driver)"/>
     </include>
   </group>
