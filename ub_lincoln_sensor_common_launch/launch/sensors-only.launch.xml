@@ -40,9 +40,7 @@
 
     <!-- IMU -->
     <!-- <arg name="imu_raw_name" default="/sensing/gnss/novatel/oem7/imu/data_raw"/> -->
-    <group>
-      <!-- IMU driver is a part of the GNSS driver-->
-    </group>
+    <!-- IMU driver is a part of the GNSS driver-->
   </group>
 
   <!-- Vehicle -->
