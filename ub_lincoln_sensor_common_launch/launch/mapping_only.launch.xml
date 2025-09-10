@@ -7,7 +7,7 @@
   <!-- Static transforms -->
   <!-- sensor_kit_base_link to Lidar -->
   <node pkg="tf2_ros" exec="static_transform_publisher"
-        name="base_linik_to_lidar" 
+        name="base_link_to_lidar" 
         args="--x 0.9 --y 0.0 --z 2.0 --roll 0.0 --pitch 0.0 --yaw 0.0 --frame-id base_link --child-frame-id velodyne_top"/>
 
   <!-- sensor_kit_base_link to gnss_link -->
@@ -18,7 +18,7 @@
   <!-- sensor_kit_base_link to imu_link --> 
   <node pkg="tf2_ros" exec="static_transform_publisher"
         name="base_link_to_imu"
-        args="--x 0.0 --y 0.0 --z 0.2 --roll 0.0 --pitch 0.0 --yaw 0.0 --frame-id base_link --child-frame-id imu_link"/>
+        args="--x 0.0 --y 0.0 --z 0.2 --roll 0.0 --pitch 0.0 --yaw -1.57079632679 --frame-id base_link --child-frame-id imu_link"/>
 
   <!-- Sensing -->
   <group>
@@ -55,11 +55,7 @@
     </group>
   </group>
 
-  <node pkg="ros2bag" exec="bag" name="bag_record" output="screen"
-        args="record
-              /sensing/lidar/top/pointcloud_raw_ex
-              /sensing/gnss/novatel/oem7/fix
-              /sensing/gnss/novatel/oem7/imu/data_raw
-              /tf_static
-              -o mapping_script_test"/>
+  <!-- Ros Bag Record -->
+  <executable cmd="ros2 bag record /sensing/lidar/top/pointcloud_raw_ex /sensing/gnss/novatel/oem7/imu/data_raw /sensing/gnss/novatel/oem7/fix /tf_static /tf -o /host_data/test_map"/>
+  
 </launch>
