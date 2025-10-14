@@ -56,6 +56,6 @@
   </group>
 
   <!-- Ros Bag Record -->
-  <executable cmd="ros2 bag record /sensing/lidar/top/pointcloud_raw_ex /sensing/gnss/novatel/oem7/imu/data_raw /sensing/gnss/novatel/oem7/fix /tf_static /tf -o /host_data/test_map"/>
+  <executable cmd="ros2 bag record /sensing/lidar/top/pointcloud_raw_ex /sensing/gnss/novatel/oem7/imu/data_raw /sensing/gnss/novatel/oem7/fix /sensing/gnss/novatel/oem7/bestutm /tf_static /tf -o /host_data/test_map"/>
   
 </launch>

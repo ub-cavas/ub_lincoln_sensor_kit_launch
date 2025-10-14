@@ -1,14 +1,14 @@
 <launch>
   <arg name="launch_driver" default="true"/>
-  <arg name="camera_type" default="left"/>
-<!-- 
+  <arg name="camera_type" default="front"/>
+
   <group>
     <push-ros-namespace namespace="camera"/>
     <group>
-      <push-ros-namespace namespace="traffic_light"/>
+      <push-ros-namespace namespace="camera6"/>
 
       <!-- (usb_cam_node is assumed to have launched on logging PC) -->
-      <node pkg="topic_tools" exec="relay" name="tl_camera_info_relay" output="log">
+      <!-- <node pkg="topic_tools" exec="relay" name="tl_camera_info_relay" output="log">
         <param name="input_topic" value="$(var camera_type)/camera_info"/>
         <param name="output_topic" value="camera_info"/>
         <param name="type" value="sensor_msgs/msg/CameraInfo"/>
@@ -20,7 +20,26 @@
         <param name="output_topic" value="image_raw/compressed"/>
         <param name="type" value="sensor_msgs/msg/CompressedImage"/>
         <param name="reliability" value="best_effort"/>
+      </node> -->
+
+      <!-- Launch VimbaX Camera Node-->
+      <node pkg="vimbax_camera" exec="vimbax_camera_node" name="vimbax_camera" output="log">
+        <param name="camera_id" value="DEV_000F315C3534"/>
+        <param name="camera_frame_id" value="traffic_light_left_camera/camera_link"/>
+        <param name="use_ros_time" value="True"/>
+        <param name="autostream" value="1"/>
+        <param name="settings_file" value="/root/.ros/camera_info/DEV_000F315C3534.xml"/>
+        <param name="camera_info_url" value="/root/.ros/camera_info/DEV_000F315C3534.yaml"/>
+        
+        <!-- Remap topics to avoid 2 publishers to /image_raw (wip for traffic_light detection using camera) -->
+        <remap from="image_raw" to="dummy"/>
       </node>
+
+      <!-- Launch VimbaX Camera using python launch script (wip) -->
+      <!-- <include file="$(find-pkg-share vimbax_camera)/launch/vimbax_camera.launch.py">
+        <arg name="camera_id" value="DEV_000F315C3534"/>
+        <arg name="camera_frame_id" value="traffic_light_left_camera/camera_link"/>
+        <remap from="~/image_raw" to="/dummy"> -->
     </group>
-  </group> -->
+  </group>
 </launch>
