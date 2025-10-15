@@ -2,6 +2,7 @@
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:macro name="sensor_kit_macro" params="parent x y z roll pitch yaw">
     <xacro:include filename="$(find vls_description)/urdf/VLS-128.urdf.xacro"/>
+    <xacro:include filename="$(find camera_description)/urdf/monocular_camera.xacro"/>
     <xacro:include filename="$(find imu_description)/urdf/imu.xacro"/>
     
     <xacro:arg name="gpu" default="true"/>
@@ -59,6 +60,22 @@
       pitch="${calibration['sensor_kit_base_link']['imu_link']['pitch']}"
       yaw="${calibration['sensor_kit_base_link']['imu_link']['yaw']}"
       fps="100"
+    />
+  <!-- Traffic Light Camera Left-->
+    <xacro:monocular_camera_macro
+      name="traffic_light_left_camera/camera"
+      parent="sensor_kit_base_link"
+      namespace=""
+      x="${calibration['sensor_kit_base_link']['traffic_light_left_camera/camera_link']['x']}"
+      y="${calibration['sensor_kit_base_link']['traffic_light_left_camera/camera_link']['y']}"
+      z="${calibration['sensor_kit_base_link']['traffic_light_left_camera/camera_link']['z']}"
+      roll="${calibration['sensor_kit_base_link']['traffic_light_left_camera/camera_link']['roll']}"
+      pitch="${calibration['sensor_kit_base_link']['traffic_light_left_camera/camera_link']['pitch']}"
+      yaw="${calibration['sensor_kit_base_link']['traffic_light_left_camera/camera_link']['yaw']}"
+      fps="111.98"
+      width="2064"
+      height="744"
+      fov="1.3"
     />
   </xacro:macro>
 </robot>
