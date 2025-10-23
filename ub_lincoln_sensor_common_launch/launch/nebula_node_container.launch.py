@@ -39,11 +39,29 @@ def get_lidar_make(sensor_name):
 
 
 def get_vehicle_info(context):
-    # TODO(TIER IV): Use Parameter Substitution after we drop Galactic support
-    # https://github.com/ros2/launch_ros/blob/master/launch_ros/launch_ros/substitutions/parameter.py
-    gp = context.launch_configurations.get("ros_params", {})
-    if not gp:
-        gp = dict(context.launch_configurations.get("global_params", {}))
+    
+    # gp = context.launch_configurations.get("ros_params", {})
+    # if not gp:
+    #     gp = dict(context.launch_configurations.get("global_params", {}))
+    
+    # gp_path = LaunchConfiguration("vehicle_info_file").perform(context)
+    # with open(gp_path,"r") as f:
+    #     gp = yaml.safe_load(f)["/**"]["ros__parameters"]
+    
+    # Try to get parameters from the launch context first
+    gp = context.launch_configurations.get("ros_params") or context.launch_configurations.get("global_params")
+
+    # If no in-memory params found, try loading from file
+    if gp:
+        # If it’s a LaunchConfiguration object, make a dict copy to avoid mutation issues
+        gp = dict(gp)
+    else:
+        # Try to fetch the path and load YAML
+        gp_path = LaunchConfiguration("vehicle_info_file").perform(context)
+        with open(gp_path, "r") as f:
+            data = yaml.safe_load(f)
+            gp = data.get("/**", {}).get("ros__parameters", {})
+
     p = {}
     p["vehicle_length"] = gp["front_overhang"] + gp["wheel_base"] + gp["rear_overhang"]
     p["vehicle_width"] = gp["wheel_tread"] + gp["left_overhang"] + gp["right_overhang"]

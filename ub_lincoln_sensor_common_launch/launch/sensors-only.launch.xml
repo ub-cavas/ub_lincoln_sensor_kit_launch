@@ -3,7 +3,20 @@
   <arg name="launch_driver" default="true" description="do launch driver"/>  
   <!-- LIDAR Config-->
   <arg name="vehicle_mirror_param_file" default="$(find-pkg-share ub_lincoln_vehicle_description)/config/mirror.param.yaml"/>
-
+  <!-- Robot State Publisher -->
+  <arg name="vehicle_model" default="ub_lincoln_vehicle" description="vehicle model name"/>
+  <arg name="sensor_model" default="ub_lincoln_sensor_kit" description="sensor model name"/>
+  <arg name="config_dir" default="$(find-pkg-share $(var sensor_model)_description)/config" description="path to dir where sensors_calibration.yaml, etc. are located"/>
+  <arg name="vehicle_info_file" default="$(find-pkg-share $(var vehicle_model)_description)/config/vehicle_info.param.yaml" description="path to vehicle_info.yaml file"/>
+  
+  <!-- Robot State Publisher for TF's -->
+  <group>
+    <arg name="model_file" default="$(find-pkg-share autoware_core_vehicle)/urdf/vehicle.xacro" description="path to the file of model settings (*.xacro)"/>
+    <node name="robot_state_publisher" pkg="robot_state_publisher" exec="robot_state_publisher">
+      <param name="robot_description" value="$(command 'xacro $(var model_file) vehicle_model:=$(var vehicle_model) sensor_model:=$(var sensor_model) config_dir:=$(var config_dir)' 'warn')"/>
+    </node>
+  </group>
+  
   <!-- Sensing -->
   <group>
     <push-ros-namespace namespace="sensing"/>
