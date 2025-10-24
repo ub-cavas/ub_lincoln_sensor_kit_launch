@@ -3,8 +3,8 @@
   <arg name="launch_driver" default="true" description="do launch driver"/>  
   <!-- LIDAR Config-->
   <arg name="vehicle_mirror_param_file" default="$(find-pkg-share ub_lincoln_vehicle_description)/config/mirror.param.yaml"/>
-  <arg name="output_file_name" default="/host_data/map"/>
-  
+  <arg name="output_file_name" description="Please provide the name of the bag you are collecting along with path if no path bag will be saved in WORKINGDIR"/>
+  <arg name="topics_to_record" description="Please provide the topics you want to record or give -a to record all published topics."/>
   <!-- Robot State Publisher -->
   <arg name="vehicle_model" default="ub_lincoln_vehicle" description="vehicle model name"/>
   <arg name="sensor_model" default="ub_lincoln_sensor_kit" description="sensor model name"/>
@@ -55,6 +55,6 @@
   </group>
 
   <!-- Ros Bag Record -->
-  <executable cmd="ros2 bag record /sensing/lidar/top/pointcloud_raw_ex /sensing/gnss/novatel/oem7/imu/data_raw /sensing/gnss/novatel/oem7/fix /sensing/gnss/novatel/oem7/bestutm /tf_static /tf -o $(var output_file_name)"/>
+  <executable cmd="ros2 bag record $(var topics_to_record) -o $(var output_file_name)"/>
   
 </launch>
