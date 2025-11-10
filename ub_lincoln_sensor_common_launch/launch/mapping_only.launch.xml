@@ -1,10 +1,10 @@
-<launch>
-    <!-- Config-->
-  <arg name="launch_driver" default="true" description="do launch driver"/>  
+<launch>  
   <!-- LIDAR Config-->
   <arg name="vehicle_mirror_param_file" default="$(find-pkg-share ub_lincoln_vehicle_description)/config/mirror.param.yaml"/>
   <arg name="output_file_name" description="Please provide the name of the bag you are collecting along with path if no path bag will be saved in WORKINGDIR"/>
-  <arg name="topics_to_record" description="Please provide the topics you want to record or give -a to record all published topics."/>
+  <arg name="mapping_topics" description="Topics needed for mapping" default="/sensing/lidar/top/pointcloud_raw_ex /sensing/gnss/novatel/oem7/imu/data_raw /sensing/gnss/novatel/oem7/imu/data /sensing/gnss/novatel/oem7/fix /sensing/gnss/novatel/oem7/bestutm  /tf_static /tf">
+  <arg name="topics_to_record" default="$(var mapping_topics)" description="Please provide the topics you want to record or give -a to record all published topics."/>
+  
   <!-- Robot State Publisher -->
   <arg name="vehicle_model" default="ub_lincoln_vehicle" description="vehicle model name"/>
   <arg name="sensor_model" default="ub_lincoln_sensor_kit" description="sensor model name"/>
@@ -29,13 +29,7 @@
       <push-ros-namespace namespace="lidar"/>
       <group>
         <push-ros-namespace namespace="top"/>
-        <include file="$(find-pkg-share ub_lincoln_sensor_common_launch)/launch/nebula_node_container.launch.py">
-          <arg name="sensor_model" value="VLP32"/>
-          <arg name="launch_driver" value="$(var launch_driver)"/>
-          <arg name="config_file" value="$(find-pkg-share ub_lincoln_sensor_common_launch)/config/VLP32.param.yaml"/>
-          <arg name="launch_driver_only" value="true"/>
-          <arg name="vehicle_mirror_param_file" value="$(var vehicle_mirror_param_file)"/>
-          <arg name="container_name" value="pointcloud_container"/>
+        <include file="$(find-pkg-share velodyne)/launch/velodyne-all-nodes-composed-launch.py">
         </include>
       </group>
     </group>
