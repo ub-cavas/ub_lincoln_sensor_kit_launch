@@ -1,10 +1,8 @@
-<launch>  
+<launch>
+  <!-- Config-->
+  <arg name="launch_driver" default="true" description="do launch driver"/>  
   <!-- LIDAR Config-->
   <arg name="vehicle_mirror_param_file" default="$(find-pkg-share ub_lincoln_vehicle_description)/config/mirror.param.yaml"/>
-  <arg name="output_file_name" description="Please provide the name of the bag you are collecting along with path if no path bag will be saved in WORKINGDIR"/>
-  <arg name="mapping_topics" description="Topics needed for mapping" default="/sensing/lidar/top/pointcloud_raw_ex /sensing/gnss/novatel/oem7/imu/data_raw /sensing/gnss/novatel/oem7/imu/data /sensing/gnss/novatel/oem7/fix /sensing/gnss/novatel/oem7/bestutm  /tf_static /tf">
-  <arg name="topics_to_record" default="$(var mapping_topics)" description="Please provide the topics you want to record or give -a to record all published topics."/>
-  
   <!-- Robot State Publisher -->
   <arg name="vehicle_model" default="ub_lincoln_vehicle" description="vehicle model name"/>
   <arg name="sensor_model" default="ub_lincoln_sensor_kit" description="sensor model name"/>
@@ -18,7 +16,7 @@
       <param name="robot_description" value="$(command 'xacro $(var model_file) vehicle_model:=$(var vehicle_model) sensor_model:=$(var sensor_model) config_dir:=$(var config_dir)' 'warn')"/>
     </node>
   </group>
-
+  
   <!-- Sensing -->
   <group>
     <push-ros-namespace namespace="sensing"/>
@@ -28,15 +26,21 @@
       <let name="driver_pointcloud_topic_name" value="/velodyne_points"/>
       <push-ros-namespace namespace="lidar"/>
       <group>
-        <push-ros-namespace namespace="top"/>
-        <include file="$(find-pkg-share velodyne)/launch/velodyne-all-nodes-composed-launch.py">
+        <!-- <push-ros-namespace namespace="top"/> -->
+        <include file="$(find-pkg-share ub_lincoln_sensor_common_launch)/launch/nebula_node_container.launch.py">
+          <arg name="sensor_model" value="VLP32"/>
+          <arg name="launch_driver" value="$(var launch_driver)"/>
+          <arg name="config_file" value="$(find-pkg-share ub_lincoln_sensor_common_launch)/config/VLP32.param.yaml"/>
+          <arg name="launch_driver_only" value="true"/>
+          <arg name="vehicle_mirror_param_file" value="$(var vehicle_mirror_param_file)"/>
+          <arg name="container_name" value="pointcloud_container"/>
         </include>
       </group>
     </group>
 
     <!-- GNSS -->
     <group>
-      <let name="navsatfix_topic_name" value="/sensing/gnss/novatel/oem7/fix"/>
+      <!-- <let name="navsatfix_topic_name" value="/sensing/gnss/novatel/oem7/fix"/> -->
       <push-ros-namespace namespace="gnss"/>
       <group>
         <set_env name="NOVATEL_OEM7_DRIVER_PARAM_OVERRIDES_PATH" value="$(find-pkg-share ub_lincoln_sensor_common_launch)/config/novatel_overrides_std_msg_topics.yaml"/>
@@ -46,9 +50,24 @@
         </include>
       </group>
     </group>
+
+    <!-- IMU -->
+    <!-- <arg name="imu_raw_name" default="/sensing/gnss/novatel/oem7/imu/data_raw"/> -->
+    <!-- IMU driver is a part of the GNSS driver-->
   </group>
 
-  <!-- Ros Bag Record -->
-  <executable cmd="ros2 bag record -o $(var output_file_name) /sensing/lidar/top/velodyne_packets /sensing/lidar/top/velodyne_points /sensing/gnss/novatel/oem7/imu/data /sensing/gnss/novatel/oem7/imu/data_raw /sensing/gnss/novatel/oem7/fix /tf /tf_static"/>
-  
+  <!-- Vehicle -->
+  <group>
+    <!-- DBW Driver -->
+    <include file="$(find-pkg-share ub_lincoln_vehicle_common_launch)/launch/dbw.launch.xml">
+      <arg name="launch_driver" value="$(var launch_driver)"/>
+    </include>
+  </group>
+
+  <group>
+    <!-- Bridge -->
+    <include file="$(find-pkg-share ub_lincoln_vehicle_common_launch)/launch/bridge.launch.py">
+      <arg name="launch_driver" value="$(var launch_driver)"/>
+    </include>
+  </group>
 </launch>
