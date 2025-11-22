@@ -13,7 +13,7 @@
     </include>
 
     <!-- GNSS & IMU Driver -->
-    <include file="$(find-pkg-share ub_lincoln_sensor_common_launch)/launch/gnss-imu.launch.xml">
+    <include file="$(find-pkg-share ub_lincoln_sensor_common_launch)/launch/gnss_imu.launch.xml">
       <arg name="launch_driver" value="$(var launch_driver)"/>
     </include>
 

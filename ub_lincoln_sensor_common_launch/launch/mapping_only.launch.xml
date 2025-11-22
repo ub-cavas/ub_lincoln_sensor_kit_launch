@@ -2,22 +2,14 @@
   <!-- LIDAR Config-->
   <arg name="vehicle_mirror_param_file" default="$(find-pkg-share ub_lincoln_vehicle_description)/config/mirror.param.yaml"/>
   <arg name="output_file_name" description="Please provide the name of the bag you are collecting along with path if no path bag will be saved in WORKINGDIR"/>
-  <arg name="mapping_topics" description="Topics needed for mapping" default="/sensing/lidar/top/pointcloud_raw_ex /sensing/gnss/novatel/oem7/imu/data_raw /sensing/gnss/novatel/oem7/imu/data /sensing/gnss/novatel/oem7/fix /sensing/gnss/novatel/oem7/bestutm  /tf_static /tf">
+  <arg name="mapping_topics" description="Topics needed for mapping" default="/sensing/lidar/top/pointcloud_raw_ex /sensing/gnss/novatel/oem7/imu/data_raw /sensing/gnss/novatel/oem7/imu/data /sensing/gnss/novatel/oem7/fix /sensing/gnss/novatel/oem7/bestutm  /tf_static /tf"/>
   <arg name="topics_to_record" default="$(var mapping_topics)" description="Please provide the topics you want to record or give -a to record all published topics."/>
+
+  <!-- Publish Lidar's Static Tf w.r.t. base_link -->
+  <executable cmd="ros2 run tf2_ros static_transform_publisher --x 1.24 --y 0 --z 1.93 --roll 0.0 --pitch 0.0 --yaw 0.0 --frame-id base_link --child-frame-id velodyne"/>
   
-  <!-- Robot State Publisher -->
-  <arg name="vehicle_model" default="ub_lincoln_vehicle" description="vehicle model name"/>
-  <arg name="sensor_model" default="ub_lincoln_sensor_kit" description="sensor model name"/>
-  <arg name="config_dir" default="$(find-pkg-share $(var sensor_model)_description)/config" description="path to dir where sensors_calibration.yaml, etc. are located"/>
-  <arg name="vehicle_info_file" default="$(find-pkg-share $(var vehicle_model)_description)/config/vehicle_info.param.yaml" description="path to vehicle_info.yaml file"/>
-  
-  <!-- Robot State Publisher for TF's -->
-  <group>
-    <arg name="model_file" default="$(find-pkg-share autoware_core_vehicle)/urdf/vehicle.xacro" description="path to the file of model settings (*.xacro)"/>
-    <node name="robot_state_publisher" pkg="robot_state_publisher" exec="robot_state_publisher">
-      <param name="robot_description" value="$(command 'xacro $(var model_file) vehicle_model:=$(var vehicle_model) sensor_model:=$(var sensor_model) config_dir:=$(var config_dir)' 'warn')"/>
-    </node>
-  </group>
+  <!-- Publish Gnss & Imu's Static Tf w.r.t. base_link -->
+  <executable cmd="ros2 run tf2_ros static_transform_publisher --x -0.17 --y 0 --z 0.6 --roll 0.0 --pitch 0.0 --yaw 0.0 --frame-id base_link --child-frame-id imu_link"/>
 
   <!-- Sensing -->
   <group>
@@ -29,7 +21,7 @@
       <push-ros-namespace namespace="lidar"/>
       <group>
         <push-ros-namespace namespace="top"/>
-        <include file="$(find-pkg-share velodyne)/launch/velodyne-all-nodes-composed-launch.py">
+        <include file="$(find-pkg-share velodyne)/launch/velodyne-all-nodes-VLP32C-composed-launch.py">
         </include>
       </group>
     </group>
@@ -49,6 +41,6 @@
   </group>
 
   <!-- Ros Bag Record -->
-  <executable cmd="ros2 bag record -o $(var output_file_name) /sensing/lidar/top/velodyne_packets /sensing/lidar/top/velodyne_points /sensing/gnss/novatel/oem7/imu/data /sensing/gnss/novatel/oem7/imu/data_raw /sensing/gnss/novatel/oem7/fix /tf /tf_static"/>
+  <executable cmd="ros2 bag record -o $(var output_file_name) /sensing/lidar/top/velodyne_packets /sensing/lidar/top/velodyne_points /sensing/gnss/novatel/oem7/imu/data /sensing/gnss/novatel/oem7/imu/data_raw /sensing/gnss/novatel/oem7/fix /sensing/gnss/novatel/oem7/bestutm /tf /tf_static"/>
   
 </launch>
