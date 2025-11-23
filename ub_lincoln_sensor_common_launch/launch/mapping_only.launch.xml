@@ -6,9 +6,13 @@
   <arg name="topics_to_record" default="$(var mapping_topics)" description="Please provide the topics you want to record or give -a to record all published topics."/>
 
   <!-- Publish Lidar's Static Tf w.r.t. base_link -->
+  <!-- The below values are derieved from the sensors_calibration.yaml in ub_linicoln_sensor_kit_description -->
   <executable cmd="ros2 run tf2_ros static_transform_publisher --x 1.24 --y 0 --z 1.93 --roll 0.0 --pitch 0.0 --yaw 0.0 --frame-id base_link --child-frame-id velodyne"/>
   
   <!-- Publish Gnss & Imu's Static Tf w.r.t. base_link -->
+  <!-- The below values are derieved by subtracting imu_link from the lidar w.r.t.
+  base_link (sensor_calibration.yaml) [1.24-1.07=0.17] ==> 0.17 is the distance between 
+  base_link (center of the rear axel of mkz) and imu -->
   <executable cmd="ros2 run tf2_ros static_transform_publisher --x -0.17 --y 0 --z 0.6 --roll 0.0 --pitch 0.0 --yaw 0.0 --frame-id base_link --child-frame-id imu_link"/>
 
   <!-- Sensing -->
