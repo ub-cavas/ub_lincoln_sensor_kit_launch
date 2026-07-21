@@ -35,29 +35,25 @@ def get_lidar_make(sensor_name):
         return "Velodyne", ".yaml"
     elif sensor_name.lower() in ["helios", "bpearl"]:
         return "Robosense", None
+    elif sensor_name[:2].lower() == "os":
+        return "Ouster", None
     return "unrecognized_sensor_model"
 
 
 def get_vehicle_info(context):
-    
-    # gp = context.launch_configurations.get("ros_params", {})
-    # if not gp:
-    #     gp = dict(context.launch_configurations.get("global_params", {}))
-    
-    # gp_path = LaunchConfiguration("vehicle_info_file").perform(context)
-    # with open(gp_path,"r") as f:
-    #     gp = yaml.safe_load(f)["/**"]["ros__parameters"]
-    
-    # Try to get parameters from the launch context first
-    gp = context.launch_configurations.get("ros_params") or context.launch_configurations.get("global_params")
-
-    # If no in-memory params found, try loading from file
+    # Prefer in-memory launch parameters (set by top-level Autoware launchers). Fall back to
+    # reading vehicle_info_file from disk so this launch works standalone.
+    gp = context.launch_configurations.get("ros_params") \
+        or context.launch_configurations.get("global_params")
     if gp:
-        # If it’s a LaunchConfiguration object, make a dict copy to avoid mutation issues
         gp = dict(gp)
     else:
-        # Try to fetch the path and load YAML
         gp_path = LaunchConfiguration("vehicle_info_file").perform(context)
+        if not gp_path:
+            raise RuntimeError(
+                "vehicle_info is not loaded. Either launch via Autoware's top-level launcher, "
+                "or pass 'vehicle_info_file:=<path to vehicle_info.param.yaml>' on the "
+                "command line.")
         with open(gp_path, "r") as f:
             data = yaml.safe_load(f)
             gp = data.get("/**", {}).get("ros__parameters", {})
@@ -81,6 +77,36 @@ def get_vehicle_mirror_info(context):
     return p
 
 
+def _nebula_node_args(sensor_make, sensor_model, sensor_calib_fp):
+    """Return the package/plugin/driver-topic/params tuple for a given vendor."""
+    if sensor_make == "Ouster":
+        return {
+            "package": "nebula_ouster",
+            "plugin": "nebula::ros::OusterRosWrapper",
+            "driver_topic": "points",
+            "driver_params": [
+                LaunchConfiguration("config_file"),
+                {
+                    "sensor_model": sensor_model,
+                    "launch_hw": LaunchConfiguration("launch_driver"),
+                },
+            ],
+        }
+    return {
+        "package": "nebula_ros",
+        "plugin": sensor_make + "RosWrapper",
+        "driver_topic": "velodyne_points",
+        "driver_params": [
+            LaunchConfiguration("config_file"),
+            {
+                "calibration_file": sensor_calib_fp,
+                "sensor_model": sensor_model,
+                "launch_hw": LaunchConfiguration("launch_driver"),
+            },
+        ],
+    }
+
+
 def launch_setup(context, *args, **kwargs):
     def create_parameter_dict(*args):
         result = {}
@@ -91,10 +117,10 @@ def launch_setup(context, *args, **kwargs):
     # Model and make
     sensor_model = LaunchConfiguration("sensor_model").perform(context)
     sensor_make, sensor_extension = get_lidar_make(sensor_model)
-    nebula_decoders_share_dir = get_package_share_directory("nebula_decoders")
 
-    # Calibration file
+    # Calibration file — Ouster falls into the `else` branch (sensor_extension is None).
     if sensor_extension is not None:  # Velodyne and Hesai
+        nebula_decoders_share_dir = get_package_share_directory("nebula_decoders")
         sensor_calib_fp = os.path.join(
             nebula_decoders_share_dir,
             "calibration",
@@ -104,23 +130,22 @@ def launch_setup(context, *args, **kwargs):
         assert os.path.exists(
             sensor_calib_fp
         ), "Sensor calib file under calibration/ was not found: {}".format(sensor_calib_fp)
-    else:  # Robosense
+    else:  # Robosense / Ouster
         sensor_calib_fp = ""
 
-    # Condition to launch nebula_ros driver alone and skip the pipeline
+    nebula_args = _nebula_node_args(sensor_make, sensor_model, sensor_calib_fp)
+
+    # Condition to launch the driver alone and skip the pipeline
     if LaunchConfiguration("launch_driver_only").perform(context).lower() == "true":
         nodes = []
         nodes.append(
             ComposableNode(
-                package="nebula_ros",
-                plugin=sensor_make + "RosWrapper",
+                package=nebula_args["package"],
+                plugin=nebula_args["plugin"],
                 name=sensor_make.lower() + "_ros_wrapper_node",
-                parameters=[LaunchConfiguration("config_file"),
-                            {"calibration_file": sensor_calib_fp,
-                             "sensor_model": sensor_model,
-                             "launch_hw": LaunchConfiguration("launch_driver")}],
+                parameters=nebula_args["driver_params"],
                 remappings=[
-                    ("velodyne_points", "pointcloud_raw_ex"),
+                    (nebula_args["driver_topic"], "pointcloud_raw_ex"),
                 ],
                 extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
             )
@@ -149,22 +174,12 @@ def launch_setup(context, *args, **kwargs):
 
     nodes.append(
         ComposableNode(
-            package="nebula_ros",
-            plugin=sensor_make + "RosWrapper",
+            package=nebula_args["package"],
+            plugin=nebula_args["plugin"],
             name=sensor_make.lower() + "_ros_wrapper_node",
-            parameters=[LaunchConfiguration("config_file"),
-                {
-                    "calibration_file": sensor_calib_fp,
-                    "sensor_model": sensor_model,
-                    "launch_hw": LaunchConfiguration("launch_driver"),
-                },
-            ],
+            parameters=nebula_args["driver_params"],
             remappings=[
-                # cSpell:ignore knzo25
-                # TODO(knzo25): fix the remapping once nebula gets updated
-                ("velodyne_points", "pointcloud_raw_ex"),
-                # ("robosense_points", "pointcloud_raw_ex"), #for robosense
-                # ("pandar_points", "pointcloud_raw_ex"), # for hesai
+                (nebula_args["driver_topic"], "pointcloud_raw_ex"),
             ],
             extra_arguments=[{"use_intra_process_comms": LaunchConfiguration("use_intra_process")}],
         )
@@ -307,6 +322,11 @@ def generate_launch_description():
         "vehicle_mirror_param_file", description="path to the file of vehicle mirror position yaml"
     )
     add_launch_arg(
+        "vehicle_info_file", "",
+        description="fallback path to vehicle_info.param.yaml when ros_params/global_params "
+                    "aren't set by a top-level launcher",
+    )
+    add_launch_arg(
         "distortion_correction_node_param_path",
         os.path.join(
             common_sensor_share_dir,
@@ -324,7 +344,7 @@ def generate_launch_description():
         ),
         description="path to parameter file of ring outlier filter node",
     )
-    
+
     set_container_executable = SetLaunchConfiguration(
         "container_executable",
         "component_container",

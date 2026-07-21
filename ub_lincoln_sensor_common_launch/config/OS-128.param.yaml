@@ -1,0 +1,42 @@
+# OS-128.param.yaml — Ouster config for the ub_lincoln sensor kit
+# Nebula-Ouster driver (ub-cavas/nebula @ add-ouster-support)
+# Destination: ub_lincoln_sensor_common_launch/config/OS-128.param.yaml
+
+/**:
+  ros__parameters:
+    # --- ROS wrapper ---
+    sensor_model: OS-128
+    launch_hw: true
+    frame_id: velodyne_top        # keep old frame name so URDF/TF/calibration still match
+    metadata_file: ""             # empty = fetch beam intrinsics over HTTP from the sensor
+
+    # --- Network (REQUIRED) ---
+    connection:
+      sensor_ip: 192.168.1.8    # the Ouster's actual IP (DHCP by default — verify it)
+      host_ip: 192.168.1.10       # an address your host NIC actually holds on this subnet
+      data_port: 7502             # Ouster lidar data (was Velodyne 2368)
+      imu_port: 7503              # Ouster IMU (0 to disable)
+      filter_sender_ip: true
+
+    # --- Field of view (REQUIRED) ---
+    # azimuth 0–360; elevation set to your model (OS1 ≈ ±45, OS0 ≈ ±45/90, OS2 ≈ ±11)
+    fov:
+      azimuth:
+        min_deg: 0.0
+        max_deg: 360.0
+      elevation:
+        min_deg: -45.0
+        max_deg: 45.0
+
+    # --- Diagnostics (REQUIRED) --- values assume 10 Hz mode
+    diagnostics:
+      pointcloud_publish_rate:
+        frequency_ok:
+          min_hz: 9.0
+          max_hz: 11.0
+        frequency_warn:
+          min_hz: 8.0
+          max_hz: 12.0
+        num_frame_transition: 1
+      packet_liveness:
+        timeout_ms: 1000
