@@ -5,7 +5,7 @@
   <arg name="use_intra_process_comms" default="true"/>
   <arg name="vehicle_id" default="$(env VEHICLE_ID default)"/>
   <arg name="pointcloud_container_name" default="pointcloud_container"/>
-  <arg name="calib_file" default="$(find-pkg-share nebula_decoders)/calibration/velodyne/VLP32.yaml"/>
+  <!-- <arg name="calib_file" default="$(find-pkg-share nebula_decoders)/calibration/velodyne/VLP32.yaml"/> -->
 
 <!-- LIDAR -->
 
